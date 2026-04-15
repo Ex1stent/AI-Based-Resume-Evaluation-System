@@ -42,6 +42,14 @@ Create PostgreSQL DB:
 - DB name in default config: `ai_resume`
 - Update `DATABASE_URL` in `.env` if needed.
 
+AI service configuration (optional, for real LLM responses):
+- `AI_SERVICE_ENABLED=true`
+- `AI_API_BASE_URL=https://api.openai.com/v1` (or any OpenAI-compatible endpoint)
+- `AI_API_KEY=your_api_key`
+- `AI_MODEL=gpt-4o-mini` (or your preferred model)
+
+If AI service is disabled or key is missing, the backend automatically uses local fallback logic.
+
 Run API:
 
 ```bash
@@ -89,7 +97,7 @@ Tables:
 - `GET /api/candidates?skills=python,angular&min_experience=2`
 - `GET /api/candidates/{candidate_id}`
 - `POST /api/candidates/{candidate_id}/resume` (multipart file upload)
-
+- `DELETE /api/candidates/{candidate_id}` (Admin only)
 ### Jobs
 - `POST /api/jobs`
 - `GET /api/jobs`

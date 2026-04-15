@@ -10,26 +10,29 @@ import { AuthService } from '../../core/auth.service';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   template: `
-    <div class="page">
-      <h2>AI Resume Tool - Login</h2>
-      <form [formGroup]="form" (ngSubmit)="submit()" class="card">
+    <div class="page-shell">
+      <div class="hero">
+        <h2>Hire Up</h2>
+        <p>Secure login for Admin and HR teams</p>
+      </div>
+      <form [formGroup]="form" (ngSubmit)="submit()" class="panel card">
         <label>Username</label>
-        <input type="text" formControlName="username" />
+        <input class="input" type="text" formControlName="username" />
         <label>Password</label>
-        <input type="password" formControlName="password" />
-        <button type="submit" [disabled]="form.invalid || loading">{{ loading ? 'Loading...' : 'Login' }}</button>
+        <input class="input" type="password" formControlName="password" />
+        <button class="btn" type="submit" [disabled]="form.invalid || loading">{{ loading ? 'Loading...' : 'Login' }}</button>
       </form>
       <p class="help">Demo users: admin/admin123 (Admin), hr/hr123 (HR)</p>
-      <p class="error" *ngIf="error">{{ error }}</p>
+      <p class="error-text" *ngIf="error">{{ error }}</p>
     </div>
   `,
   styles: [
     `
-      .page { max-width: 420px; margin: 40px auto; font-family: Arial, sans-serif; }
-      .card { border: 1px solid #d7d7d7; padding: 16px; display: grid; gap: 8px; }
-      input, button { padding: 8px; }
-      .error { color: #b00020; }
-      .help { color: #555; font-size: 13px; }
+      .page-shell { max-width: 440px; margin: 70px auto; padding: 0 14px; }
+      .hero { text-align: center; margin-bottom: 10px; }
+      .hero p { color: #5d6e8b; margin-top: 6px; }
+      .card { display: grid; gap: 8px; }
+      .help { color: #5d6e8b; font-size: 13px; margin-top: 6px; }
     `,
   ],
 })
@@ -43,7 +46,7 @@ export class LoginComponent {
     password: ['', Validators.required],
   });
 
-  constructor(private auth: AuthService, private router: Router) {}
+  constructor(private auth: AuthService, private router: Router) { }
 
   submit(): void {
     if (this.form.invalid) {

@@ -1,0 +1,4 @@
+Delete Me
+Experience: 4 years
+Skills: Python, FastAPI, Docker, AWS
+Education: B.Tech in CS

@@ -35,4 +35,8 @@ export class CandidateService {
     formData.append('resume_file', file);
     return this.http.post<{ message: string }>(`${this.apiBase}/${candidateId}/resume`, formData);
   }
+
+  delete(id: number): Observable<{ message: string }> {
+    return this.http.delete<{ message: string }>(`${this.apiBase}/${id}`);
+  }
 }

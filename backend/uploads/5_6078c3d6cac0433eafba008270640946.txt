@@ -1,0 +1,5 @@
+Riya Verma
+Software Engineer
+Experience: 5 years
+Skills: Python, FastAPI, Angular, SQL, PostgreSQL, Docker, AWS
+Education: Bachelor of Technology in Computer Science

@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 
+import { AuthService } from '../../core/auth.service';
 import { CandidateService } from '../../core/candidate.service';
 import { Candidate, CandidateDetail } from '../../core/models';
 
@@ -10,62 +11,71 @@ import { Candidate, CandidateDetail } from '../../core/models';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, FormsModule],
   template: `
-    <h2>Candidates</h2>
+    <div class="page-shell">
+      <h2 class="page-title">Candidate Management</h2>
+      <p class="page-subtitle">Create profiles, upload resumes, and filter candidates by fit.</p>
 
-    <form [formGroup]="createForm" (ngSubmit)="createCandidate()" class="box">
-      <h3>Create Candidate</h3>
-      <div class="row">
-        <input placeholder="Name" formControlName="name" />
-        <input placeholder="Email" formControlName="email" />
-        <input placeholder="Phone" formControlName="phone" />
-        <button type="submit" [disabled]="createForm.invalid">Create</button>
+      <form [formGroup]="createForm" (ngSubmit)="createCandidate()" class="panel">
+        <h3>Create Candidate</h3>
+        <div class="row form-row">
+          <input class="input" placeholder="Name" formControlName="name" />
+          <input class="input" placeholder="Email" formControlName="email" />
+          <input class="input" placeholder="Phone" formControlName="phone" />
+          <button class="btn" type="submit" [disabled]="createForm.invalid">Create</button>
+        </div>
+      </form>
+
+      <div class="panel">
+        <h3>Filters</h3>
+        <div class="row form-row">
+          <input class="input" [(ngModel)]="skillsFilter" placeholder="Skills (comma separated)" />
+          <input class="input" type="number" [(ngModel)]="minExperience" placeholder="Min experience" />
+          <button class="btn btn-secondary" (click)="loadCandidates()">Apply Filters</button>
+        </div>
       </div>
-    </form>
 
-    <div class="box">
-      <h3>Filters</h3>
-      <div class="row">
-        <input [(ngModel)]="skillsFilter" placeholder="Skills (comma separated)" />
-        <input type="number" [(ngModel)]="minExperience" placeholder="Min experience" />
-        <button (click)="loadCandidates()">Apply Filters</button>
+      <div class="panel">
+        <div class="table-wrap">
+          <table>
+            <tr>
+              <th>ID</th><th>Name</th><th>Email</th><th>Skills</th><th>Experience</th><th>Action</th>
+            </tr>
+            <tr *ngFor="let c of candidates">
+              <td>{{ c.id }}</td>
+              <td>{{ c.name }}</td>
+              <td>{{ c.email }}</td>
+              <td>{{ c.skills.join(', ') }}</td>
+              <td>{{ c.experience_years }}</td>
+              <td class="row">
+                <button class="btn btn-secondary" (click)="selectCandidate(c.id)">View</button>
+                <button class="btn btn-danger" *ngIf="auth.role() === 'Admin'" (click)="deleteCandidate(c.id)">Delete</button>
+              </td>
+            </tr>
+          </table>
+        </div>
       </div>
-    </div>
 
-    <table>
-      <tr>
-        <th>ID</th><th>Name</th><th>Email</th><th>Skills</th><th>Experience</th><th>Action</th>
-      </tr>
-      <tr *ngFor="let c of candidates">
-        <td>{{ c.id }}</td>
-        <td>{{ c.name }}</td>
-        <td>{{ c.email }}</td>
-        <td>{{ c.skills.join(', ') }}</td>
-        <td>{{ c.experience_years }}</td>
-        <td><button (click)="selectCandidate(c.id)">View</button></td>
-      </tr>
-    </table>
+      <div *ngIf="selected" class="panel">
+        <h3>Candidate Detail - {{ selected.name }}</h3>
+        <div class="detail-grid">
+          <p><b>Summary:</b> {{ selected.summary || '-' }}</p>
+          <p><b>Education:</b> {{ selected.education || '-' }}</p>
+          <p><b>Skills:</b> {{ selected.skills.join(', ') || '-' }}</p>
+          <p><b>Experience:</b> {{ selected.experience_years }} years</p>
+        </div>
 
-    <div *ngIf="selected" class="box">
-      <h3>Candidate Detail - {{ selected.name }}</h3>
-      <p><b>Summary:</b> {{ selected.summary || '-' }}</p>
-      <p><b>Education:</b> {{ selected.education || '-' }}</p>
-      <p><b>Skills:</b> {{ selected.skills.join(', ') || '-' }}</p>
-      <p><b>Experience:</b> {{ selected.experience_years }} years</p>
-
-      <div class="row">
-        <input type="file" (change)="onFileChange($event)" />
-        <button (click)="uploadResume()" [disabled]="!selectedFile">Upload Resume</button>
+        <div class="row">
+          <input class="input" type="file" (change)="onFileChange($event)" />
+          <button class="btn" (click)="uploadResume()" [disabled]="!selectedFile">Upload Resume</button>
+          <p class="success-text">{{ message }}</p>
+        </div>
       </div>
-      <p>{{ message }}</p>
     </div>
   `,
   styles: [
     `
-      .box { border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; }
-      .row { display: flex; gap: 8px; flex-wrap: wrap; }
-      input, button { padding: 6px; }
-      table { width: 100%; border-collapse: collapse; margin-top: 8px; }
-      th, td { border: 1px solid #ddd; padding: 6px; }
+      .form-row .input { flex: 1 1 200px; }
+      .detail-grid { display: grid; gap: 8px; margin: 8px 0 12px; }
     `,
   ],
 })
@@ -86,7 +96,7 @@ export class CandidatesComponent implements OnInit {
     phone: [''],
   });
 
-  constructor(private candidateService: CandidateService) {}
+  constructor(private candidateService: CandidateService, public auth: AuthService) {}
 
   ngOnInit(): void {
     this.loadCandidates();
@@ -133,6 +143,17 @@ export class CandidatesComponent implements OnInit {
     this.candidateService.uploadResume(this.selected.id, this.selectedFile).subscribe((res) => {
       this.message = res.message;
       this.selectCandidate(this.selected!.id);
+      this.loadCandidates();
+    });
+  }
+
+  deleteCandidate(id: number): void {
+    this.candidateService.delete(id).subscribe(() => {
+      if (this.selected?.id === id) {
+        this.selected = null;
+        this.selectedFile = null;
+        this.message = '';
+      }
       this.loadCandidates();
     });
   }

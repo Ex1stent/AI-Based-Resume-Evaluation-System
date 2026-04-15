@@ -66,3 +66,8 @@ def upload_resume(
     CandidateService(db).upload_resume(candidate_id, resume_file)
     return MessageResponse(message="Resume uploaded and parsed successfully")
 
+
+@router.delete("/{candidate_id}", response_model=MessageResponse, dependencies=[Depends(require_roles("Admin"))])
+def delete_candidate(candidate_id: int, db: Session = Depends(get_db), _=Depends(get_current_user)):
+    CandidateService(db).delete_candidate(candidate_id)
+    return MessageResponse(message="Candidate deleted successfully")

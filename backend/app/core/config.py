@@ -9,6 +9,10 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 120
     upload_dir: str = "uploads"
+    ai_service_enabled: bool = False
+    ai_api_base_url: str = "https://api.openai.com/v1"
+    ai_api_key: str = ""
+    ai_model: str = "gpt-4o-mini"
 
 
 settings = Settings()

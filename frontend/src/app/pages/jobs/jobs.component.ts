@@ -11,48 +11,53 @@ import { Job } from '../../core/models';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   template: `
-    <h2>Jobs</h2>
-    <form [formGroup]="form" (ngSubmit)="save()" class="box">
-      <h3>{{ editingId ? 'Edit Job' : 'Create Job' }}</h3>
-      <div class="grid">
-        <input placeholder="Title" formControlName="title" />
-        <input placeholder="Department" formControlName="department" />
-        <input placeholder="Skills (comma separated)" formControlName="skills" />
-        <input type="number" placeholder="Experience required" formControlName="experience_required" />
-      </div>
-      <textarea rows="4" placeholder="Description" formControlName="description"></textarea>
-      <button type="submit" [disabled]="form.invalid">{{ editingId ? 'Update' : 'Create' }}</button>
-      <button type="button" *ngIf="editingId" (click)="reset()">Cancel</button>
-    </form>
+    <div class="page-shell">
+      <h2 class="page-title">Job Management</h2>
+      <p class="page-subtitle">Create and maintain role requirements for intelligent matching.</p>
+      <form [formGroup]="form" (ngSubmit)="save()" class="panel">
+        <h3>{{ editingId ? 'Edit Job' : 'Create Job' }}</h3>
+        <div class="grid-2">
+          <input class="input" placeholder="Title" formControlName="title" />
+          <input class="input" placeholder="Department" formControlName="department" />
+          <input class="input" placeholder="Skills (comma separated)" formControlName="skills" />
+          <input class="input" type="number" placeholder="Experience required" formControlName="experience_required" />
+        </div>
+        <textarea rows="4" placeholder="Description" formControlName="description"></textarea>
+        <div class="row">
+          <button class="btn" type="submit" [disabled]="form.invalid">{{ editingId ? 'Update' : 'Create' }}</button>
+          <button class="btn btn-secondary" type="button" *ngIf="editingId" (click)="reset()">Cancel</button>
+        </div>
+      </form>
 
-    <table>
-      <tr>
-        <th>ID</th><th>Title</th><th>Department</th><th>Skills</th><th>Exp</th><th>Actions</th>
-      </tr>
-      <tr *ngFor="let j of jobs">
-        <td>{{ j.id }}</td>
-        <td>{{ j.title }}</td>
-        <td>{{ j.department }}</td>
-        <td>{{ j.skills.join(', ') }}</td>
-        <td>{{ j.experience_required }}</td>
-        <td>
-          <button (click)="edit(j)">Edit</button>
-          <button *ngIf="auth.role() === 'Admin'" (click)="remove(j.id)">Delete</button>
-        </td>
-      </tr>
-    </table>
-    <div *ngIf="selectedJob" class="box">
-      <h3>Improved Description (AI)</h3>
-      <p>{{ selectedJob.improved_description }}</p>
+      <div class="panel">
+        <div class="table-wrap">
+          <table>
+            <tr>
+              <th>ID</th><th>Title</th><th>Department</th><th>Skills</th><th>Exp</th><th>Actions</th>
+            </tr>
+            <tr *ngFor="let j of jobs">
+              <td>{{ j.id }}</td>
+              <td>{{ j.title }}</td>
+              <td>{{ j.department }}</td>
+              <td>{{ j.skills.join(', ') }}</td>
+              <td>{{ j.experience_required }}</td>
+              <td class="row">
+                <button class="btn btn-secondary" (click)="edit(j)">Edit</button>
+                <button class="btn btn-danger" *ngIf="auth.role() === 'Admin'" (click)="remove(j.id)">Delete</button>
+              </td>
+            </tr>
+          </table>
+        </div>
+      </div>
+      <div *ngIf="selectedJob" class="panel">
+        <h3>Improved Description (AI)</h3>
+        <p class="muted">{{ selectedJob.improved_description }}</p>
+      </div>
     </div>
   `,
   styles: [
     `
-      .box { border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; }
-      .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
-      input, textarea, button { padding: 6px; margin-bottom: 6px; }
-      table { width: 100%; border-collapse: collapse; }
-      th, td { border: 1px solid #ddd; padding: 6px; text-align: left; }
+      textarea { margin: 10px 0; width: 100%; }
     `,
   ],
 })

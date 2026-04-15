@@ -50,24 +50,29 @@ class CandidateService:
         resume = self.candidate_repository.save_resume(Resume(candidate_id=candidate_id, file_path=path, raw_text=raw_text))
 
         parsed = self.ai_service.parse_resume(raw_text)
-        candidate.skills_text = ", ".join(parsed["skills"])
-        candidate.experience_years = parsed["experience_years"]
-        candidate.education = parsed["education"]
-        candidate.summary = self.ai_service.generate_candidate_summary(
+        summary = self.ai_service.generate_candidate_summary(
             candidate_name=candidate.name,
             skills=parsed["skills"],
             experience_years=parsed["experience_years"],
             education=parsed["education"],
         )
+
+        candidate.skills_text = ", ".join(parsed["skills"])
+        candidate.experience_years = parsed["experience_years"]
+        candidate.education = parsed["education"]
+        candidate.summary = summary
         self.candidate_repository.update(candidate)
 
         self.ai_data_repository.create("candidate", candidate.id, "resume_parse", str(parsed))
         self.ai_data_repository.create("candidate", candidate.id, "summary", candidate.summary or "")
         return resume
 
+    def delete_candidate(self, candidate_id: int) -> None:
+        candidate = self.get_candidate_detail(candidate_id)
+        self.candidate_repository.delete(candidate)
+
     def _extract_text(self, raw_bytes: bytes) -> str:
         try:
             return raw_bytes.decode("utf-8")
         except UnicodeDecodeError:
             return raw_bytes.decode("latin-1", errors="ignore")
-

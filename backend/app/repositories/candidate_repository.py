@@ -51,3 +51,6 @@ class CandidateRepository:
     def recent(self, limit: int = 5) -> list[Candidate]:
         return self.db.query(Candidate).order_by(desc(Candidate.created_at)).limit(limit).all()
 
+    def delete(self, candidate: Candidate) -> None:
+        self.db.delete(candidate)
+        self.db.commit()

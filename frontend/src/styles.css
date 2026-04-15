@@ -1,1 +1,189 @@
-/* You can add global styles to this file, and also import other style files */
+:root {
+  --bg: #f2f5fb;
+  --panel: #ffffff;
+  --text: #14223b;
+  --muted: #5c6b85;
+  --border: #d9e1ee;
+  --brand: #1c6dd0;
+  --brand-strong: #1557ab;
+  --success: #1d8f5f;
+  --danger: #bf2f4d;
+  --shadow: 0 10px 30px rgba(20, 34, 59, 0.08);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  color: var(--text);
+  background:
+    radial-gradient(circle at 10% 0%, #ffffff 0%, transparent 30%),
+    linear-gradient(180deg, #f8fbff 0%, var(--bg) 60%);
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  font-weight: 700;
+  color: #0f1f38;
+}
+
+p {
+  margin: 0;
+}
+
+.page-shell {
+  display: grid;
+  gap: 16px;
+}
+
+.page-title {
+  font-size: 26px;
+  letter-spacing: 0.2px;
+}
+
+.page-subtitle {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  padding: 18px;
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.input,
+.select,
+textarea,
+input {
+  border: 1px solid #c8d5ea;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 14px;
+  background: #fff;
+  color: var(--text);
+}
+
+.input:focus,
+.select:focus,
+textarea:focus,
+input:focus {
+  outline: 2px solid #bad8ff;
+  border-color: var(--brand);
+}
+
+.btn {
+  border: 1px solid var(--brand);
+  background: var(--brand);
+  color: #fff;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn:hover {
+  background: var(--brand-strong);
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background: #fff;
+  color: var(--brand);
+}
+
+.btn-danger {
+  border-color: var(--danger);
+  background: var(--danger);
+}
+
+.table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  border-bottom: 1px solid #e5ecf6;
+  padding: 11px 10px;
+  text-align: left;
+  font-size: 14px;
+}
+
+th {
+  color: #3a4b69;
+  background: #f7fafe;
+  font-weight: 700;
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.stat-card {
+  background: linear-gradient(135deg, #f7fbff, #edf4ff);
+  border: 1px solid #d7e5ff;
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.stat-label {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.stat-value {
+  margin-top: 6px;
+  font-size: 24px;
+  font-weight: 800;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.success-text {
+  color: var(--success);
+}
+
+.error-text {
+  color: var(--danger);
+}
+
+@media (max-width: 900px) {
+  .grid-2,
+  .stat-grid {
+    grid-template-columns: 1fr;
+  }
+}

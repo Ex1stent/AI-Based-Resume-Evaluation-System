@@ -64,4 +64,3 @@ class JobService:
     def delete_job(self, job_id: int) -> None:
         job = self.get_job(job_id)
         self.job_repository.delete(job)
-

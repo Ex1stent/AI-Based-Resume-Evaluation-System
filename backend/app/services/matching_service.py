@@ -61,4 +61,3 @@ class MatchingService:
 
     def _skills_to_set(self, skills_text: str | None) -> set[str]:
         return {s.strip().lower() for s in (skills_text or "").split(",") if s.strip()}
-

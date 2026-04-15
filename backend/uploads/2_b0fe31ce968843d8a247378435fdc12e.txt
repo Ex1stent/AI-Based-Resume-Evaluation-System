@@ -1,0 +1,6 @@
+Aarav Sharma
+Senior Software Engineer
+Experience: 6 years in backend and cloud systems
+Skills: Python, FastAPI, Angular, SQL, PostgreSQL, Docker, AWS, Git
+Education: Bachelor of Technology in Computer Science
+Built hiring analytics platform and candidate ranking pipelines.

@@ -1,62 +1,47 @@
-import re
+import json
+
+import httpx
+
+from app.core.config import settings
 
 
 class AIService:
-    KNOWN_SKILLS = {
-        "python",
-        "java",
-        "javascript",
-        "typescript",
-        "angular",
-        "react",
-        "node",
-        "fastapi",
-        "django",
-        "sql",
-        "postgresql",
-        "mysql",
-        "aws",
-        "docker",
-        "kubernetes",
-        "git",
-        "html",
-        "css",
-    }
-
     def parse_resume(self, text: str) -> dict:
-        lowered = text.lower()
-        skills = sorted([skill for skill in self.KNOWN_SKILLS if re.search(rf"\b{re.escape(skill)}\b", lowered)])
-        experience_years = self._extract_experience_years(lowered)
-        education = self._extract_education(text)
-        return {
-            "skills": skills,
-            "experience_years": experience_years,
-            "education": education,
-        }
+        ai_payload = self._parse_resume_with_ai(text)
+        if ai_payload:
+            return ai_payload
+        raise RuntimeError("AI resume parsing failed. Check AI service configuration and API key.")
 
     def generate_candidate_summary(self, candidate_name: str, skills: list[str], experience_years: float, education: str | None) -> str:
-        top_skills = ", ".join(skills[:6]) if skills else "general software development"
-        edu = education or "education details not clearly listed"
-        lines = [
-            f"{candidate_name} appears to be a strong candidate for technical roles.",
-            f"Key skill areas include {top_skills}.",
-            f"Estimated hands-on experience is around {experience_years:.1f} years.",
-            "Profile indicates practical exposure to real-world project delivery.",
-            f"Education background: {edu}.",
-            "Candidate may be a good fit for teams needing quick onboarding.",
-        ]
-        return " ".join(lines)
+        ai_text = self._generate_text(
+            (
+                "Generate a professional candidate summary in 5 to 7 lines. "
+                "Keep it concise and factual.\n"
+                f"Candidate: {candidate_name}\n"
+                f"Skills: {', '.join(skills) if skills else 'Not specified'}\n"
+                f"Experience: {experience_years:.1f} years\n"
+                f"Education: {education or 'Not specified'}"
+            )
+        )
+        if ai_text:
+            return ai_text
+        raise RuntimeError("AI candidate summary generation failed. Check AI service configuration and API key.")
 
     def improve_job_description(self, title: str, department: str, description: str, skills: list[str], experience_required: float) -> str:
-        skills_line = ", ".join(skills)
-        return (
-            f"We are hiring a {title} for the {department} team. "
-            f"The role requires approximately {experience_required:.1f}+ years of relevant experience. "
-            f"Core technical skills: {skills_line}. "
-            "The selected candidate will collaborate across teams, build reliable solutions, "
-            "and contribute to continuous improvement in delivery quality. "
-            f"Role context: {description}"
+        ai_text = self._generate_text(
+            (
+                "Improve this job description for professional clarity and hiring impact. "
+                "Preserve meaning and keep it practical.\n"
+                f"Title: {title}\n"
+                f"Department: {department}\n"
+                f"Required skills: {', '.join(skills)}\n"
+                f"Experience required: {experience_required:.1f} years\n"
+                f"Current description: {description}"
+            )
         )
+        if ai_text:
+            return ai_text
+        raise RuntimeError("AI job description improvement failed. Check AI service configuration and API key.")
 
     def generate_match_explanation(
         self,
@@ -66,30 +51,79 @@ class AIService:
         missing_skills: list[str],
         experience_match_pct: float,
     ) -> str:
-        matched = ", ".join(matching_skills) if matching_skills else "no direct skill overlap yet"
-        missing = ", ".join(missing_skills) if missing_skills else "no major skill gaps"
-        return (
-            f"{candidate_name} vs {job_title}: matched skills include {matched}. "
-            f"Potential gaps: {missing}. Experience alignment is {experience_match_pct:.2f}%. "
-            "Overall this score reflects current fit based on available structured data."
+        ai_text = self._generate_text(
+            (
+                "Generate a short hiring explanation for this match result.\n"
+                f"Candidate: {candidate_name}\n"
+                f"Job: {job_title}\n"
+                f"Matched skills: {', '.join(matching_skills) if matching_skills else 'None'}\n"
+                f"Missing skills: {', '.join(missing_skills) if missing_skills else 'None'}\n"
+                f"Experience match percentage: {experience_match_pct:.2f}"
+            )
         )
+        if ai_text:
+            return ai_text
+        raise RuntimeError("AI match explanation generation failed. Check AI service configuration and API key.")
 
-    def _extract_experience_years(self, text: str) -> float:
-        years_patterns = [
-            r"(\d+(?:\.\d+)?)\s*\+?\s*years?",
-            r"experience\s*[:\-]?\s*(\d+(?:\.\d+)?)",
-        ]
-        for pattern in years_patterns:
-            match = re.search(pattern, text)
-            if match:
-                return float(match.group(1))
-        return 0.0
+    def _parse_resume_with_ai(self, resume_text: str) -> dict | None:
+        prompt = (
+            "Extract structured resume data and return strict JSON only with this shape:\n"
+            '{"skills": ["skill1", "skill2"], "experience_years": 0, "education": "text"}\n'
+            f"Resume text:\n{resume_text}"
+        )
+        ai_text = self._generate_text(prompt, response_format={"type": "json_object"})
+        if not ai_text:
+            return None
 
-    def _extract_education(self, text: str) -> str:
-        lines = [line.strip() for line in text.splitlines() if line.strip()]
-        for line in lines:
-            lowered = line.lower()
-            if any(x in lowered for x in ["b.tech", "bachelor", "master", "mca", "bca", "phd", "degree"]):
-                return line
-        return "Not specified"
+        clean = self._strip_code_fences(ai_text)
+        try:
+            payload = json.loads(clean)
+            skills = payload.get("skills", [])
+            if not isinstance(skills, list):
+                skills = []
+            skills = sorted({str(s).strip().lower() for s in skills if str(s).strip()})
 
+            experience_years = float(payload.get("experience_years", 0) or 0)
+            education = str(payload.get("education", "Not specified")).strip() or "Not specified"
+            return {"skills": skills, "experience_years": experience_years, "education": education}
+        except (json.JSONDecodeError, ValueError, TypeError):
+            return None
+
+    def _generate_text(self, prompt: str, response_format: dict | None = None) -> str | None:
+        if not settings.ai_service_enabled or not settings.ai_api_key:
+            return None
+
+        url = f"{settings.ai_api_base_url.rstrip('/')}/chat/completions"
+        payload = {
+            "model": settings.ai_model,
+            "messages": [
+                {"role": "system", "content": "You are a precise recruiting assistant."},
+                {"role": "user", "content": prompt},
+            ],
+            "temperature": 0.2,
+        }
+        if response_format:
+            payload["response_format"] = response_format
+        headers = {
+            "Authorization": f"Bearer {settings.ai_api_key}",
+            "Content-Type": "application/json",
+        }
+        if "models.github.ai" in settings.ai_api_base_url:
+            headers["Accept"] = "application/vnd.github+json"
+            headers["X-GitHub-Api-Version"] = "2026-03-10"
+        try:
+            with httpx.Client(timeout=20) as client:
+                response = client.post(url, headers=headers, json=payload)
+                response.raise_for_status()
+                data = response.json()
+                return data["choices"][0]["message"]["content"].strip()
+        except Exception:
+            return None
+
+    def _strip_code_fences(self, text: str) -> str:
+        cleaned = text.strip()
+        if cleaned.startswith("```"):
+            cleaned = cleaned.split("\n", 1)[-1] if "\n" in cleaned else cleaned.replace("```", "")
+            if cleaned.endswith("```"):
+                cleaned = cleaned[: -3]
+        return cleaned.strip()
