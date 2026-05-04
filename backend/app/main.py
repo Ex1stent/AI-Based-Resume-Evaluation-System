@@ -8,6 +8,7 @@ from app.controllers.job_controller import router as job_router
 from app.controllers.matching_controller import router as matching_router
 from app.core.database import Base, SessionLocal, engine
 from app.services.auth_service import AuthService
+from app.core.config import settings
 
 # Ensure model metadata is loaded before create_all.
 from app import models  # noqa: F401
@@ -17,7 +18,7 @@ app = FastAPI(title="AI Resume & Candidate Evaluation Tool")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:4200", "http://127.0.0.1:4200"],
+    allow_origins=settings.cors_origins_list,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

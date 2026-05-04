@@ -63,7 +63,7 @@ class AIService:
         )
         if ai_text:
             return ai_text
-        raise RuntimeError("AI match explanation generation failed. Check AI service configuration and API key.")
+        return "Match explanation unavailable."
 
     def _parse_resume_with_ai(self, resume_text: str) -> dict | None:
         prompt = (
